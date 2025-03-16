@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "358100589913",
+    "firebase_url": "https://cybersmart-1b492-default-rtdb.firebaseio.com",
+    "project_id": "cybersmart-1b492",
+    "storage_bucket": "cybersmart-1b492.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358100589913:android:a534c3f65614227de54048",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.CyberSmart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNw9jCoTpyEgWJhXawev2Ar_DvgznJON4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
