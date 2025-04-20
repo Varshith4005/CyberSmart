@@ -7,11 +7,17 @@ public class RateAppManager : MonoBehaviour
 
     public void RateApp()
     {
+        string url = ""; // Declare URL outside preprocessor directives
+
 #if UNITY_ANDROID
-        string url = "market://details?id=com.yourgame.cybersmart"; // Change package name
+        url = "market://details?id=com.yourgame.cybersmart"; // Change package name
 #elif UNITY_IOS
-        string url = "itms-apps://itunes.apple.com/app/idYOUR_APP_ID"; // Change App Store ID
+        url = "itms-apps://itunes.apple.com/app/idYOUR_APP_ID"; // Change App Store ID
+#else
+        Debug.LogWarning("RateApp feature is not supported on this platform.");
+        return; // Exit function if unsupported
 #endif
+
         StartCoroutine(ShowLoadingAndOpenURL(url));
     }
 

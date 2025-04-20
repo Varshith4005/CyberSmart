@@ -4,6 +4,9 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Firebase;
+using Firebase.Database;
+using Firebase.Auth;
 
 public class QuizManager : MonoBehaviour
 {
@@ -37,12 +40,38 @@ public class QuizManager : MonoBehaviour
     private RectTransform timerTransform;
     private bool isShaking = false;
 
+    private DatabaseReference dbReference;
+    private FirebaseAuth auth;
+
+    private int highestScore = 0; // highest score for this specific quiz
+    private int honorPoints = 0;
+
+    [Header("Set these in the Inspector")]
+    public string difficulty = "easy";  // Example: easy, medium, hard
+    public string quizTopic = "phishing";  // Example: phishing, malware, etc.
+
     void Start()
     {
         resultsPopup.SetActive(false);
         timerTransform = timerCircle.GetComponent<RectTransform>();
         timerText.color = defaultTimerColor;
         timerCircle.color = defaultTimerColor;
+
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompleted && task.Result == DependencyStatus.Available)
+            {
+                FirebaseApp app = FirebaseApp.DefaultInstance;
+                auth = FirebaseAuth.DefaultInstance;
+                dbReference = FirebaseDatabase.DefaultInstance.RootReference;
+
+                LoadPreviousScoreAndHonor();
+            }
+            else
+            {
+                Debug.LogError("Failed to initialize Firebase: " + task.Result);
+            }
+        });
 
         ShuffleAndSelectQuestions();
         LoadQuestion();
@@ -52,13 +81,13 @@ public class QuizManager : MonoBehaviour
     void ShuffleAndSelectQuestions()
     {
         List<Question> questionPool = new List<Question>(questions);
-        questions = new Question[Mathf.Min(15, questionPool.Count)]; // Select up to 15 questions
+        questions = new Question[Mathf.Min(15, questionPool.Count)];
 
         for (int i = 0; i < questions.Length; i++)
         {
             int randomIndex = Random.Range(0, questionPool.Count);
             questions[i] = questionPool[randomIndex];
-            questionPool.RemoveAt(randomIndex); // Remove selected question to avoid duplicates
+            questionPool.RemoveAt(randomIndex);
         }
     }
 
@@ -76,7 +105,6 @@ public class QuizManager : MonoBehaviour
         timerCircle.color = defaultTimerColor;
 
         Question q = questions[currentQuestionIndex];
-
         List<string> shuffledOptions = new List<string>(q.options);
         shuffledOptions.Shuffle();
 
@@ -187,11 +215,72 @@ public class QuizManager : MonoBehaviour
         {
             stars[i].enabled = i < starsEarned;
         }
+
+        UpdateScoreAndHonor();
     }
 
     public void OnContinueButtonPressed()
     {
         SceneManager.LoadScene("Easy(Category)");
+    }
+
+    void LoadPreviousScoreAndHonor()
+    {
+        if (auth.CurrentUser != null)
+        {
+            string userId = auth.CurrentUser.UserId;
+            string path = $"quizScores/{difficulty}/{quizTopic}";
+
+            dbReference.Child("users").Child(userId).GetValueAsync().ContinueWith(task =>
+            {
+                if (task.IsCompleted && task.Result.Exists)
+                {
+                    DataSnapshot snapshot = task.Result;
+
+                    if (snapshot.Child("honorPoints").Exists)
+                    {
+                        honorPoints = int.Parse(snapshot.Child("honorPoints").Value.ToString());
+                    }
+
+                    if (snapshot.Child("quizScores").Child(difficulty).Child(quizTopic).Exists)
+                    {
+                        highestScore = int.Parse(snapshot.Child("quizScores").Child(difficulty).Child(quizTopic).Value.ToString());
+                    }
+                    else
+                    {
+                        highestScore = 0;
+                    }
+                }
+                else
+                {
+                    honorPoints = 0;
+                    highestScore = 0;
+                }
+            });
+        }
+    }
+
+    void UpdateScoreAndHonor()
+    {
+        if (auth.CurrentUser != null)
+        {
+            string userId = auth.CurrentUser.UserId;
+            string path = $"quizScores/{difficulty}/{quizTopic}";
+
+            int totalPossibleScore = questions.Length * 10;
+            int bonusHonor = (score == totalPossibleScore) ? 100 : 0;
+            int finalScore = score + bonusHonor;
+
+            if (finalScore > highestScore)
+            {
+                int extraPoints = finalScore - highestScore;
+                honorPoints += extraPoints;
+                highestScore = finalScore;
+
+                dbReference.Child("users").Child(userId).Child("honorPoints").SetValueAsync(honorPoints);
+                dbReference.Child("users").Child(userId).Child(path).SetValueAsync(highestScore);
+            }
+        }
     }
 }
 

@@ -4,11 +4,13 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
 using System.Collections;
 
 public class SignUpManager : MonoBehaviour
 {
     private FirebaseAuth auth;
+    private DatabaseReference dbReference;  // Firebase database reference
 
     public TMP_InputField usernameInput;
     public TMP_InputField emailInput;
@@ -22,6 +24,7 @@ public class SignUpManager : MonoBehaviour
         {
             FirebaseApp app = FirebaseApp.DefaultInstance;
             auth = FirebaseAuth.DefaultInstance;
+            dbReference = FirebaseDatabase.DefaultInstance.RootReference; // Initialize database reference
         });
 
         errorText.text = ""; // Clear error message on start
@@ -51,9 +54,34 @@ public class SignUpManager : MonoBehaviour
         }
         else
         {
-            PlayerPrefs.SetString("Username", username);
-            PlayerPrefs.Save();
-            SceneManager.LoadScene("HomeScene"); // Redirect on success
+            FirebaseUser newUser = signUpTask.Result.User;
+
+            if (newUser != null)
+            {
+                string userId = newUser.UserId;
+
+                // ✅ Set the default profile picture path
+                string defaultProfilePicture = "Avatars/default_avatar";  // Replace with your default path
+
+                // ✅ Automatically create user entry in Firebase
+                dbReference.Child("users").Child(userId).SetRawJsonValueAsync($@"
+                {{
+                    ""username"": ""{username}"",
+                    ""email"": ""{email}"",
+                    ""profilePicture"": ""{defaultProfilePicture}"",
+                    ""honorPoints"": 0,
+                    ""highestScore"": 0
+                }}");
+
+                // Save username and email locally
+                PlayerPrefs.SetString("Username", username);
+                PlayerPrefs.SetString("Email", email);
+                PlayerPrefs.SetString("AvatarPath", defaultProfilePicture);
+                PlayerPrefs.Save();
+
+                // Redirect to Home Scene
+                SceneManager.LoadScene("HomeScene");
+            }
         }
     }
 }

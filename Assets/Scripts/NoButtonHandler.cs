@@ -4,25 +4,20 @@ using System.Collections;
 
 public class NoButtonHandler : MonoBehaviour
 {
-    public GameObject confirmationPopup;
     public GameObject loadingPanel;
 
-    void Start()
+    public void CancelPasswordPopup()
     {
-        loadingPanel.SetActive(false);
+        StartCoroutine(CancelPasswordCoroutine());
     }
 
-    public void CancelDeleteAccount()
+    private IEnumerator CancelPasswordCoroutine()
     {
-        StartCoroutine(CancelDeletionCoroutine());
-    }
-
-    private IEnumerator CancelDeletionCoroutine()
-    {
-        confirmationPopup.SetActive(false); // Hide confirmation popup
-        loadingPanel.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
-        
-        SceneManager.LoadScene("SettingsScene");
+        if (loadingPanel != null)
+        {
+            loadingPanel.SetActive(true); // Show loading screen
+            yield return new WaitForSeconds(1.5f); // Simulate loading delay
+        }
+        SceneManager.LoadScene("SettingsScene"); // Redirect back to SettingsScene
     }
 }

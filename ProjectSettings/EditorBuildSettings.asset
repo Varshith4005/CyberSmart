@@ -56,6 +56,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Easy(Malware).unity
     guid: 49ac8b9f09d8d9a71a2dca333618e428
+  - enabled: 1
+    path: Assets/Scenes/ForgotPasswordScene.unity
+    guid: 604c7b459f2d593c7a9ffbf87b385d6f
+  - enabled: 1
+    path: Assets/Scenes/Easy(Malware(Course)).unity
+    guid: a148329783866cc4b9591e55ca341c91
+  - enabled: 1
+    path: Assets/Scenes/Easy(Malware(Quiz)).unity
+    guid: 7a47ef716197234a8862a4256fad58fb
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
